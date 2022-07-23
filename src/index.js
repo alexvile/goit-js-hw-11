@@ -1,72 +1,103 @@
-import axios from "axios";
-import debounce from "lodash.debounce"
 
+// import debounce from "lodash.debounce"
 
+import ImgApi from './js/imgApi';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import imgCardTpl from './template/imgCardTpl.hbs';
 
-const BASE_URL = 'https://pixabay.com/api';
-const API_KEY = '28483362-313f04b4986d5508c9cd93d3a';
 
+// Описан в документации
+import SimpleLightbox from "simplelightbox";
+// Дополнительный импорт стилей
+import "simplelightbox/dist/simple-lightbox.min.css";
 
 const galleryEl = document.querySelector('.gallery');
 const formEl = document.getElementById('search-form');
-const searchEl = formEl.elements["searchQuery"];
-// const submitEl = formEl.elements["submit"];
+const loadMoreEl = document.querySelector('.load-more');
 
-// console.log(submitEl);
+const imgApi = new ImgApi();
 
-// const FILTER = '?fields=name,capital,population,flags,languages';
-// // const FILTER ='?fields=name.official,capital,population,flags.svg,languages';
-// // const FILTER = '';
+formEl.addEventListener('submit', onFormSubmit);
+loadMoreEl.addEventListener('click', onLoadMore);
 
+let gallery = new SimpleLightbox('.gallery a');
+// console.log(gallery);
 
+function onFormSubmit(e) {
+    e.preventDefault();
+    clearGallery()
 
-
-// formEl.addEventListener('input', debounce());
-
-
-// function onInputChange(e) { 
-
-// } 
-
-
-
-axios.get(BASE_URL, {
-    params: {
-        key: API_KEY,
-        q: 'white flower',
-        image_type: 'photo',
-        orientation: 'horizontal',
-        safesearch: 'true'
+    const searchValue = e.target.elements["searchQuery"].value.trim();
+    if (searchValue === '') {
+        loadMoreEl.classList.remove('visible');
+        return Notify.warning('The input is empty');
     }
-})
-    .then(function (response) {
-        console.log(response);
-        console.log(response.data);
-        console.log(response.data.hits);
-        const imagesFirst = response.data.hits;
-        // console.log(response.data.hits[12].webformatURL);
-        renderCards(imagesFirst);
-    })
-    .catch(function (error) {
+    imgApi.query = searchValue;
+    loadMoreEl.classList.add('visible');
+    loadMoreEl.classList.add('loading');
+    loadMoreEl.setAttribute("disabled", "true");
+    imgApi.resetPage();
+
+   
+    imgApi.fetchPictures()
+        .then(data => {
+            // console.log(data);
+            
+             if (data.totalHits == 0) {
+                 loadMoreEl.classList.remove('loading');
+                 loadMoreEl.classList.remove('visible');
+                 loadMoreEl.removeAttribute("disabled", "true");
+                 return Notify.failure('Sorry, there are no images matching your search query. Please try again.');
+            }
+           
+            loadMoreEl.classList.remove('loading');
+            loadMoreEl.removeAttribute("disabled", "true");
+
+            Notify.success(`Hooray! We found ${data.totalHits} images`);
+
+            const imagesGroup = data.hits;
+            renderCards(imagesGroup);
+                
+            gallery.refresh();
+        })
+     .catch(function (error) {
         console.log(error);
     });
+    
+    
+};
+
+
+
+function onLoadMore() {
+     if (imgApi.query === '') {
+        return 
+    }
+    loadMoreEl.setAttribute("disabled", "true");
+    imgApi.fetchPictures()
+        .then(data => {
+            // console.log(data);
+            loadMoreEl.classList.remove('loading');
+            loadMoreEl.removeAttribute("disabled", "true");
+            const imagesGroup = data.hits;
+            renderCards(imagesGroup);
+            gallery.refresh();
+        })
+     .catch(function (error) {
+        console.log(error);
+    });
+  loadMoreEl.classList.add('loading');
+}
 
 
 
 function renderCards(objects) {
-    // console.log(countries);
-    let markup = [];
-
-    objects.map(object => {
-            console.log(object);
-            markup.push(imgCardTpl(object));
-        });
-    // refs.countryInfo.innerHTML = markup;
-    
-    galleryEl.innerHTML = markup.join('');
+    // console.log(objects);
+    galleryEl.insertAdjacentHTML('beforeend', imgCardTpl(objects));
 }
-
+function clearGallery() {
+     galleryEl.innerHTML = '';
+} 
 
 
 
