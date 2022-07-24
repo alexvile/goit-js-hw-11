@@ -39,7 +39,7 @@ function onFormSubmit(e) {
     imgApi.resetPage();
 
    
-    imgApi.fetchPictures()
+ imgApi.fetchPictures()
         .then(data => {
             // console.log(data);
             
@@ -59,6 +59,10 @@ function onFormSubmit(e) {
             renderCards(imagesGroup);
                 
             gallery.refresh();
+               if (data.hits.length < 40) {
+                // Notify.warning("We're sorry, but you've reached the end of search results.");
+                loadMoreEl.classList.remove('visible');
+            }
         })
      .catch(function (error) {
         console.log(error);
@@ -76,12 +80,28 @@ function onLoadMore() {
     loadMoreEl.setAttribute("disabled", "true");
     imgApi.fetchPictures()
         .then(data => {
-            // console.log(data);
+            
             loadMoreEl.classList.remove('loading');
             loadMoreEl.removeAttribute("disabled", "true");
             const imagesGroup = data.hits;
             renderCards(imagesGroup);
             gallery.refresh();
+
+
+            const { height: cardHeight } = document
+            .querySelector(".gallery")
+            .firstElementChild.getBoundingClientRect();
+
+            window.scrollBy({
+            top: cardHeight * 2,
+            behavior: "smooth",
+            });
+
+
+            if (data.hits.length < 40) {
+                Notify.warning("We're sorry, but you've reached the end of search results.");
+                loadMoreEl.classList.remove('visible');
+            }
         })
      .catch(function (error) {
         console.log(error);
@@ -113,25 +133,4 @@ function clearGallery() {
 
 
 
-
-// let word = 'serbia';
-
-
-
-  
-// function fetchImages(image) {
-//     return fetch(`${BASE_URL}/?key=${API_KEY}&q=${image}&image_type=photo&orientation=horizontal&safesearch=true`)
-//         .then(response => {
-//             console.log(response);
-//             return response.json();
-//         });
-// }
-
-
-
-// fetchImages(word).then(data => {
-//     console.log(data);
-//     console.log(data.hits[8].webformatURL);
-    
-// })
 

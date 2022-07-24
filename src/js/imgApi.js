@@ -8,27 +8,26 @@ export default class ImgApi {
         this.page = 1;
     }
 
-fetchPictures() {
-console.log(this);
-  return  axios.get(BASE_URL, {
+  async fetchPictures() {
+// console.log(this);
+  const response = await axios.get(BASE_URL, {
     params: {
-        key: API_KEY,
-        q: `${this.searchQuerry}`,
-        image_type: 'photo',
-        orientation: 'horizontal',
-          safesearch: 'true',
-        page:`${this.page}`,
-        // per_page:'40'
-        per_page:'40'
-        }
-  })
-    .then( response => {
-      this.incrementPage();
-      // console.log(response);
-      // console.log(response.data);
-      return response.data;
-  })
+      key: API_KEY,
+      q: `${this.searchQuerry}`,
+      image_type: 'photo',
+      orientation: 'horizontal',
+      safesearch: 'true',
+      page: `${this.page}`,
+      // per_page:'40'
+      per_page: '40'
+    }
+  });
+  this.incrementPage();
+  // console.log(response);
+  // console.log(response.data);
+  return response.data;
   }
+
   incrementPage() {
       this.page += 1;
   }
