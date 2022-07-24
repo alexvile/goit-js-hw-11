@@ -21,6 +21,9 @@ export default class ImgApi {
       page: `${this.page}`,
       // per_page:'40'
       per_page: '40'
+    },
+        headers: {
+        'Content-Type': 'application/json'
     }
   });
     
